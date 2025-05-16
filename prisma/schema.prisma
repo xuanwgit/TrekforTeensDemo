@@ -1,0 +1,89 @@
+// This is your Prisma schema file
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          Role      @default(VOLUNTEER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  events        Event[]   @relation("EventParticipants")
+  createdEvents Event[]   @relation("EventCreator")
+  donations     Donation[]
+  region        Region?   @relation(fields: [regionId], references: [id])
+  regionId      String?
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  date        DateTime
+  location    String
+  maxCapacity Int
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  creator     User      @relation("EventCreator", fields: [creatorId], references: [id])
+  creatorId   String
+  participants User[]   @relation("EventParticipants")
+  region      Region    @relation(fields: [regionId], references: [id])
+  regionId    String
+}
+
+model Region {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  imageUrl    String?
+  events      Event[]
+  users       User[]
+  shelters    Shelter[]
+}
+
+model Shelter {
+  id          String    @id @default(cuid())
+  name        String
+  address     String
+  description String
+  imageUrl    String?
+  region      Region    @relation(fields: [regionId], references: [id])
+  regionId    String
+}
+
+model Donation {
+  id          String    @id @default(cuid())
+  amount      Float
+  currency    String    @default("CAD")
+  donor       User      @relation(fields: [donorId], references: [id])
+  donorId     String
+  createdAt   DateTime  @default(now())
+  isAnonymous Boolean   @default(false)
+}
+
+model News {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  imageUrl    String?
+  publishedAt DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  region      Region    @relation(fields: [regionId], references: [id])
+  regionId    String
+}
+
+enum Role {
+  ADMIN
+  VOLUNTEER
+  TEEN
+  PARTNER
+} 
